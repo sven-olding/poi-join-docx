@@ -1,0 +1,31 @@
+plugins {
+  id 'java'
+  id 'application'
+} 
+
+mainClassName = 'poijoindocx.App'
+version = '1.0'
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Application to insert a MS Word document at a given bookmark into another', 'Implementation-Version': version
+    }
+}
+
+sourceCompatibility = 1.8
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+  implementation 'org.apache.poi:poi-ooxml:3.7'
+  implementation 'org.apache.poi:poi:3.7'
+  implementation 'org.apache.poi:ooxml-schemas:1.1'
+  implementation 'xmlbeans:xmlbeans:2.3.0'
+}
