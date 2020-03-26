@@ -4,20 +4,12 @@ plugins {
 } 
 
 mainClassName = 'poijoindocx.App'
-version = '1.0'
-
-jar {
-    manifest {
-        attributes 'Implementation-Title': 'Application to insert a MS Word document at a given bookmark into another', 'Implementation-Version': version
-    }
-}
 
 sourceCompatibility = 1.8
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
-
 
 repositories {
     mavenCentral()
