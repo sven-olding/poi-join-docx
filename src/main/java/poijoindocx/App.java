@@ -15,6 +15,8 @@ import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.xmlbeans.XmlCursor;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTBookmark;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRPr;
 
 public class App {
 
@@ -34,20 +36,36 @@ public class App {
         for (final XWPFRun run : bookmarkParagraph.getRuns()) {
           run.setText("", 0);
         }
-        final XmlCursor cursor = bookmarkParagraph.getCTP().newCursor();
         final XWPFDocument subDoc = new XWPFDocument(fisSubDoc);
         final List<IBodyElement> bodyElementsSub = subDoc.getBodyElements();
 
-        for (final IBodyElement bodyElementSub : bodyElementsSub) {
-          if (bodyElementSub.getElementType() == BodyElementType.TABLE) {
-            final XWPFTable x = (XWPFTable) bodyElementSub;
-            XWPFTable newTable;
-            if (cursor.toNextSibling()) {
-              newTable = wordDoc.insertNewTbl(cursor);
-            } else {
-              newTable = wordDoc.createTable();
+        for (int i = 0; i < 3; i++) {
+          XmlCursor cursor = bookmarkParagraph.getCTP().newCursor();
+          for (final IBodyElement bodyElementSub : bodyElementsSub) {
+            if (bodyElementSub.getElementType() == BodyElementType.TABLE) {
+              final XWPFTable x = (XWPFTable) bodyElementSub;
+
+              XWPFTable newTable;
+              if (cursor.toNextSibling()) {
+                newTable = wordDoc.insertNewTbl(cursor);
+              } else {
+                newTable = wordDoc.createTable();
+              }
+              cloneTable(newTable, x);
+              cursor = newTable.getCTTbl().newCursor();
+
+            } else if (bodyElementSub.getElementType() == BodyElementType.PARAGRAPH) {
+              XWPFParagraph p = (XWPFParagraph) bodyElementSub;
+
+              XWPFParagraph newP;
+              if (cursor.toNextSibling()) {
+                newP = wordDoc.insertNewParagraph(cursor);
+              } else {
+                newP = wordDoc.createParagraph();
+              }
+              cloneParagraph(newP, p);
+              cursor = newP.getCTP().newCursor();
             }
-            cloneTable(newTable, x);
           }
         }
       }
@@ -56,6 +74,27 @@ public class App {
     } catch (final Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private static void cloneParagraph(XWPFParagraph clone, XWPFParagraph source) {
+    CTPPr pPr = clone.getCTP().isSetPPr() ? clone.getCTP().getPPr() : clone.getCTP().addNewPPr();
+    pPr.set(source.getCTP().getPPr());
+    for (XWPFRun r : source.getRuns()) {
+      XWPFRun nr = clone.createRun();
+      cloneRun(nr, r);
+    }
+  }
+
+  private static void cloneRun(XWPFRun clone, XWPFRun source) {
+    CTRPr rPr = clone.getCTR().isSetRPr() ? clone.getCTR().getRPr() : clone.getCTR().addNewRPr();
+    rPr.set(source.getCTR().getRPr());
+    clone.setText(source.getText(0));
+    clone.setBold(source.isBold());
+    clone.setItalic(source.isItalic());
+    clone.setStrike(source.isStrike());
+    clone.setFontFamily(source.getFontFamily() != null ? source.getFontFamily() : "Arial");
+    clone.setFontSize(source.getFontSize() > -1 ? source.getFontSize() : 10);
+    clone.setUnderline(source.getUnderline());
   }
 
   private static void cloneTable(final XWPFTable clone, final XWPFTable source) {
